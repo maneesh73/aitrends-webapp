@@ -1,0 +1,38 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cd /home/vps3ct/projects/aitrends-webapp
+
+            echo "=== Pulling latest code ==="
+            git pull origin main
+
+            echo "=== Installing backend dependencies ==="
+            ~/.local/bin/uv pip install -r backend/requirements.txt --python backend/.venv
+
+            echo "=== Building frontend ==="
+            export PATH="$HOME/.local/share/fnm:$PATH"
+            eval "$(fnm env)"
+            cd frontend && npm ci --silent && npm run build
+            cd ..
+
+            echo "=== Restarting backend service ==="
+            systemctl --user restart aipulse-backend
+
+            echo "=== Deploy complete ==="
