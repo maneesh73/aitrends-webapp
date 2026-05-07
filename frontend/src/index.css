@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-bg-primary text-slate-100 font-sans antialiased;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-bg-secondary;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-light rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-bg-card border border-border rounded-xl p-5 hover:border-border-light transition-all duration-200 hover:shadow-lg hover:shadow-black/20;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .btn-primary {
+    @apply px-4 py-2 bg-accent-purple hover:bg-violet-600 text-white rounded-lg font-medium transition-colors duration-150 text-sm;
+  }
+  .btn-secondary {
+    @apply px-4 py-2 bg-bg-hover hover:bg-border-light text-slate-300 rounded-lg font-medium transition-colors duration-150 text-sm border border-border;
+  }
+  .section-title {
+    @apply text-2xl font-bold text-white mb-1;
+  }
+  .section-subtitle {
+    @apply text-slate-400 text-sm mb-6;
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-purple to-accent-cyan;
+  }
+  .nav-link {
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-bg-hover transition-all duration-150 text-sm font-medium;
+  }
+  .nav-link.active {
+    @apply text-white bg-bg-hover border border-border;
+  }
+}
