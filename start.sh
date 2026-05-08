@@ -5,6 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=== AI Pulse - Starting ==="
 
+# nginx (www-data) needs execute on home dir to traverse to frontend/dist
+chmod o+x "$HOME"
+
 # Backend
 cd "$SCRIPT_DIR/backend"
 if [ ! -d ".venv" ]; then
