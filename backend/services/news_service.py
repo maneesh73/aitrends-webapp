@@ -1,6 +1,4 @@
-import httpx
 import feedparser
-import asyncio
 from datetime import datetime
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
@@ -31,79 +29,123 @@ AI_RSS_FEEDS = [
     ("Hugging Face Blog", "https://huggingface.co/blog/feed.xml"),
 ]
 
-# Google News RSS — free, no key needed, ~10 fresh articles per query
+# Google News RSS — free, no key needed
 GOOGLE_NEWS_QUERIES = [
     "artificial intelligence",
     "large language model",
-    "AI agents 2025",
+    "AI agents",
     "generative AI",
     "machine learning research",
     "OpenAI GPT",
     "Claude Anthropic",
     "AI regulation policy",
+    "AI safety alignment",
+    "deep learning neural network",
+    "AI startup funding",
+    "robotics automation AI",
+    "natural language processing NLP",
+    "computer vision AI",
+    "AI healthcare medicine",
+    "AI chip semiconductor",
+    "multimodal AI model",
+    "reinforcement learning",
+    "open source AI model",
+    "AI ethics bias",
 ]
 
-NEWSAPI_URL = "https://newsapi.org/v2/everything"
-NEWSAPI_QUERIES = [
+REDDIT_RSS_FEEDS = [
+    ("Reddit r/MachineLearning", "https://www.reddit.com/r/MachineLearning/.rss"),
+    ("Reddit r/artificial", "https://www.reddit.com/r/artificial/.rss"),
+    ("Reddit r/AINews", "https://www.reddit.com/r/AINews/.rss"),
+    ("Reddit r/LocalLLaMA", "https://www.reddit.com/r/LocalLLaMA/.rss"),
+    ("Reddit r/ChatGPT", "https://www.reddit.com/r/ChatGPT/.rss"),
+    ("Reddit r/singularity", "https://www.reddit.com/r/singularity/.rss"),
+    ("Reddit r/deeplearning", "https://www.reddit.com/r/deeplearning/.rss"),
+]
+
+GUARDIAN_SECTIONS = [
+    "technology",
+    "science",
+]
+
+GUARDIAN_QUERIES = [
     "artificial intelligence",
+    "machine learning",
     "large language model",
-    "AI agent autonomous",
-    "generative AI startup",
-    "machine learning research",
+    "generative AI",
+    "AI regulation",
 ]
 
 
-async def fetch_from_newsapi_multi(page_size: int = 20) -> List[Dict]:
-    """Run multiple NewsAPI queries in parallel."""
-    if not settings.news_api_key:
-        return []
-    async with httpx.AsyncClient(timeout=15) as client:
-        tasks = [
-            _newsapi_query(client, q, page_size)
-            for q in NEWSAPI_QUERIES
-        ]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+def fetch_guardian_articles() -> List[Dict]:
     articles = []
-    for r in results:
-        if isinstance(r, list):
-            articles.extend(r)
+    api_key = settings.guardian_api_key
+    if not api_key:
+        return []
+    import httpx
+    base_url = "https://content.guardianapis.com/search"
+    with httpx.Client(timeout=15) as client:
+        for query in GUARDIAN_QUERIES:
+            try:
+                resp = client.get(base_url, params={
+                    "q": query,
+                    "api-key": api_key,
+                    "show-fields": "thumbnail,trailText,byline",
+                    "order-by": "newest",
+                    "page-size": 20,
+                    "section": "technology|science",
+                })
+                if resp.status_code != 200:
+                    continue
+                results = resp.json().get("response", {}).get("results", [])
+                for item in results:
+                    fields = item.get("fields", {})
+                    published = None
+                    pub_str = item.get("webPublicationDate", "")
+                    if pub_str:
+                        try:
+                            published = datetime.fromisoformat(pub_str.replace("Z", "+00:00"))
+                        except Exception:
+                            pass
+                    articles.append({
+                        "title": item.get("webTitle", ""),
+                        "description": fields.get("trailText", "")[:500],
+                        "url": item.get("webUrl", ""),
+                        "image_url": fields.get("thumbnail", ""),
+                        "source": "The Guardian",
+                        "author": fields.get("byline", ""),
+                        "published_at": published,
+                        "category": "news",
+                        "tags": [query],
+                    })
+            except Exception:
+                continue
     return articles
 
 
-async def _newsapi_query(client: httpx.AsyncClient, query: str, page_size: int) -> List[Dict]:
-    try:
-        resp = await client.get(NEWSAPI_URL, params={
-            "q": query,
-            "apiKey": settings.news_api_key,
-            "language": "en",
-            "sortBy": "publishedAt",
-            "pageSize": page_size,
-        })
-        if resp.status_code == 200:
-            return resp.json().get("articles", [])
-    except Exception:
-        pass
-    return []
-
-
-async def fetch_from_newsapi(query: str = "artificial intelligence", page_size: int = 20) -> List[Dict]:
-    if not settings.news_api_key:
-        return []
-    async with httpx.AsyncClient(timeout=15) as client:
+def fetch_reddit_rss() -> List[Dict]:
+    articles = []
+    for source_name, url in REDDIT_RSS_FEEDS:
         try:
-            resp = await client.get(NEWSAPI_URL, params={
-                "q": query,
-                "apiKey": settings.news_api_key,
-                "language": "en",
-                "sortBy": "publishedAt",
-                "pageSize": page_size,
-            })
-            if resp.status_code == 200:
-                data = resp.json()
-                return data.get("articles", [])
+            feed = feedparser.parse(url, request_headers={"User-Agent": "AITrends/1.0"})
+            for entry in feed.entries[:20]:
+                published = None
+                if hasattr(entry, "published_parsed") and entry.published_parsed:
+                    published = datetime(*entry.published_parsed[:6])
+                articles.append({
+                    "title": entry.get("title", ""),
+                    "description": entry.get("summary", "")[:500] if entry.get("summary") else "",
+                    "url": entry.get("link", ""),
+                    "image_url": "",
+                    "source": source_name,
+                    "author": entry.get("author", ""),
+                    "published_at": published,
+                    "category": "news",
+                    "tags": [],
+                })
         except Exception:
-            pass
-    return []
+            continue
+    return articles
 
 
 def fetch_google_news_rss() -> List[Dict]:

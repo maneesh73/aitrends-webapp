@@ -97,6 +97,16 @@ class Video(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
+class SyncJobConfig(Base):
+    __tablename__ = "sync_job_configs"
+    id = Column(String(50), primary_key=True)
+    cron_expr = Column(String(100), default="0 */6 * * *")
+    enabled = Column(Boolean, default=False)
+    last_run_at = Column(DateTime, nullable=True)
+    last_run_status = Column(String(20), nullable=True)
+    last_run_message = Column(String(500), nullable=True)
+
+
 class TrendTopic(Base):
     __tablename__ = "trend_topics"
     id = Column(Integer, primary_key=True, index=True)

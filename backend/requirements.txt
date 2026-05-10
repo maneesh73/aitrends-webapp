@@ -10,3 +10,4 @@ aiohttp==3.9.5
 python-multipart==0.0.9
 alembic==1.13.1
 greenlet==3.0.3
+APScheduler==3.10.4

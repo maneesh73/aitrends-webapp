@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   Newspaper, FlaskConical, GraduationCap, Github,
-  Bot, TrendingUp, Home, Youtube, Zap
+  Bot, TrendingUp, Home, Youtube, Zap, Settings
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -14,6 +14,10 @@ const NAV_ITEMS = [
   { to: '/agents', icon: Bot, label: 'Agents & Tools' },
   { to: '/trends', icon: TrendingUp, label: 'Trends' },
   { to: '/videos', icon: Youtube, label: 'Videos' },
+]
+
+const ADMIN_ITEMS = [
+  { to: '/admin', icon: Settings, label: 'Sync Scheduler' },
 ]
 
 export default function Sidebar() {
@@ -46,11 +50,24 @@ export default function Sidebar() {
             {label}
           </NavLink>
         ))}
+        <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-3 pt-4 pb-2">Admin</div>
+        {ADMIN_ITEMS.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              clsx('nav-link', { active: isActive })
+            }
+          >
+            <Icon size={16} />
+            {label}
+          </NavLink>
+        ))}
       </nav>
 
       <div className="p-4 border-t border-border">
         <div className="text-xs text-slate-600 text-center">
-          Powered by arXiv · GitHub · HuggingFace · NewsAPI
+          Powered by arXiv · GitHub · Guardian · Reddit
         </div>
       </div>
     </aside>

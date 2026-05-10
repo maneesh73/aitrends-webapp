@@ -1,16 +1,28 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from config import settings
 from routers import news, github, research, courses, agents, trends
+from routers import admin
 from auth import require_sync_auth
+import scheduler as sched
 
 Base.metadata.create_all(bind=engine)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    sched.start_scheduler()
+    yield
+    sched.stop_scheduler()
+
 
 app = FastAPI(
     title="AI Trends API",
     description="Aggregated AI news, research, tools, courses and trends",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -27,6 +39,7 @@ app.include_router(research.router)
 app.include_router(courses.router)
 app.include_router(agents.router)
 app.include_router(trends.router)
+app.include_router(admin.router)
 
 
 @app.get("/")

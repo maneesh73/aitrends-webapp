@@ -43,8 +43,14 @@ def get_news(
 async def fetch_news(db: Session = Depends(get_db)):
     rss_articles = news_service.fetch_rss_articles()
     google_articles = news_service.fetch_google_news_rss()
-    newsapi_articles = await news_service.fetch_from_newsapi_multi()
-    all_articles = rss_articles + google_articles + newsapi_articles
+    reddit_articles = news_service.fetch_reddit_rss()
+    guardian_articles = news_service.fetch_guardian_articles()
+    all_articles = rss_articles + google_articles + reddit_articles + guardian_articles
     saved = news_service.save_articles(db, all_articles)
-    sources = len(news_service.AI_RSS_FEEDS) + len(news_service.GOOGLE_NEWS_QUERIES)
+    sources = (
+        len(news_service.AI_RSS_FEEDS)
+        + len(news_service.GOOGLE_NEWS_QUERIES)
+        + len(news_service.REDDIT_RSS_FEEDS)
+        + len(news_service.GUARDIAN_QUERIES)
+    )
     return FetchStatus(status="ok", fetched=saved, message=f"Fetched from {sources} sources, saved {saved} new articles")

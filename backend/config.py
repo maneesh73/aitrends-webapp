@@ -4,7 +4,7 @@ from typing import List
 
 class Settings(BaseSettings):
     database_url: str = "sqlite:///./aitrends.db"
-    news_api_key: str = ""
+    guardian_api_key: str = ""
     github_token: str = ""
     huggingface_api_key: str = ""
     youtube_api_key: str = ""
